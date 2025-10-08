@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  Linking,
-  Share,
-  Alert,
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../hooks/useAuth';
-import { AIService } from '../../services/aiService';
+import React, { useEffect, useState } from 'react';
+import {
+  Alert,
+  Linking,
+  RefreshControl,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Colors } from '../../constants/Colors';
+import { useAuth } from '../../hooks/useAuth';
 
 interface CareerTip {
   id: string;
@@ -378,46 +377,47 @@ const CareerTipsScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         {/* Quick Tips Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="flash" size={24} color={Colors.primary} />
-            <Text style={styles.sectionTitle}>Quick Career Tips</Text>
-          </View>
+        {/* Quick Tips Section */}
+<View style={styles.section}>
+  <View style={styles.sectionHeader}>
+    <Ionicons name="flash" size={24} color={Colors.primary} />
+    <Text style={styles.sectionTitle}>Quick Career Tips</Text>
+  </View>
 
-          <View style={styles.quickTipsGrid}>
-            <View style={styles.quickTip}>
-              <Ionicons name="create" size={32} color={Colors.primary} />
-              <Text style={styles.quickTipTitle}>Customize Your Resume</Text>
-              <Text style={styles.quickTipText}>
-                Tailor your resume for each application to highlight relevant skills.
-              </Text>
-            </View>
+  <View style={styles.quickTipsGrid}>
+    <View style={styles.quickTip}>
+      <Ionicons name="create" size={32} color={Colors.primary} />
+      <Text style={styles.quickTipTitle}>Customize Your Resume</Text>
+      <Text style={styles.quickTipText}>
+        Tailor your resume for each application to highlight relevant skills.
+      </Text>
+    </View>
 
-            <View style={styles.quickTip}>
-              <Ionicons name="link" size={32} color={Colors.primary} />
-              <Text style={styles.quickTipTitle}>Build Connections</Text>
-              <Text style={styles.quickTipText}>
-                Network with professionals in your desired industry on LinkedIn.
-              </Text>
-            </View>
+    <View style={styles.quickTip}>
+      <Ionicons name="link" size={32} color={Colors.primary} />
+      <Text style={styles.quickTipTitle}>Build Connections</Text>
+      <Text style={styles.quickTipText}>
+        Network with professionals in your desired industry on LinkedIn.
+      </Text>
+    </View>
 
-            <View style={styles.quickTip}>
-              <Ionicons name="code-slash" size={32} color={Colors.primary} />
-              <Text style={styles.quickTipTitle">Practice Coding</Text>
-              <Text style={styles.quickTipText}>
-                Regular coding practice improves problem-solving skills for interviews.
-              </Text>
-            </View>
+    <View style={styles.quickTip}>
+      <Ionicons name="code-slash" size={32} color={Colors.primary} />
+      <Text style={styles.quickTipTitle}>Practice Coding</Text>
+      <Text style={styles.quickTipText}>
+        Regular coding practice improves problem-solving skills for interviews.
+      </Text>
+    </View>
 
-            <View style={styles.quickTip}>
-              <Ionicons name="school" size={32} color={Colors.primary} />
-              <Text style={styles.quickTipTitle">Continuous Learning</Text>
-              <Text style={styles.quickTipText}>
-                Stay updated with new technologies through online courses and projects.
-              </Text>
-            </View>
-          </View>
-        </View>
+    <View style={styles.quickTip}>
+      <Ionicons name="school" size={32} color={Colors.primary} />
+      <Text style={styles.quickTipTitle}>Continuous Learning</Text>
+      <Text style={styles.quickTipText}>
+        Stay updated with new technologies through online courses and projects.
+      </Text>
+    </View>
+  </View>
+</View>
       </ScrollView>
     </View>
   );

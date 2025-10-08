@@ -1,20 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  RefreshControl,
-  ActivityIndicator,
-  TextInput,
-  Modal,
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Colors } from '../../constants/Colors';
 import { useAuth } from '../../hooks/useAuth';
 import { ProfileService } from '../../services/profileService';
-import { Colors } from '../../constants/Colors';
 
 interface Organization {
   id: string;
@@ -241,35 +241,35 @@ const AdminApprovalScreen: React.FC<Props> = ({ navigation }) => {
                 </Text>
               )}
 
-              <View style={.org.detailsGrid}>
-                {org.industry && (
-                  <View style={styles.detailItem}>
-                    <Ionicons name="business" size={14} color={Colors.gray} />
-                    <Text style={styles.detailText}>{org.industry}</Text>
-                  </View>
-                )}
-                
-                {org.location && (
-                  <View style={styles.detailItem}>
-                    <Ionicons name="location" size={14} color={Colors.gray} />
-                    <Text style={styles.detailText}>{org.location}</Text>
-                  </View>
-                )}
-                
-                {org.website && (
-                  <View style={styles.detailItem}>
-                    <Ionicons name="globe" size={14} color={Colors.gray} />
-                    <Text style={styles.detailText}>{org.website}</Text>
-                  </View>
-                )}
-                
-                {org.phone && (
-                  <View style={styles.detailItem}>
-                    <Ionicons name="call" size={14} color={Colors.gray} />
-                    <Text style={styles.detailText}>{org.phone}</Text>
-                  </View>
-                )}
-              </View>
+              <View style={styles.detailsGrid}>
+  {org.industry && (
+    <View style={styles.detailItem}>
+      <Ionicons name="business" size={14} color={Colors.gray} />
+      <Text style={styles.detailText}>{org.industry}</Text>
+    </View>
+  )}
+  
+  {org.location && (
+    <View style={styles.detailItem}>
+      <Ionicons name="location" size={14} color={Colors.gray} />
+      <Text style={styles.detailText}>{org.location}</Text>
+    </View>
+  )}
+  
+  {org.website && (
+    <View style={styles.detailItem}>
+      <Ionicons name="globe" size={14} color={Colors.gray} />
+      <Text style={styles.detailText}>{org.website}</Text>
+    </View>
+  )}
+  
+  {org.phone && (
+    <View style={styles.detailItem}>
+      <Ionicons name="call" size={14} color={Colors.gray} />
+      <Text style={styles.detailText}>{org.phone}</Text>
+    </View>
+  )}
+</View>
 
               {org.documents && org.documents.length > 0 && (
                 <View style={styles.documentsSection}>

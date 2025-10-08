@@ -1,6 +1,8 @@
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
-import { LogBox } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { LogBox, Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -17,7 +19,6 @@ import { theme } from './theme/theme';
 
 // Services
 import { AIService } from './services/aiService';
-import { NotificationService } from './services/notificationService';
 
 // Ignore specific warnings
 LogBox.ignoreLogs([
@@ -32,28 +33,70 @@ AIService.initialize({
   huggingFaceToken: process.env.EXPO_PUBLIC_HUGGINGFACE_TOKEN,
 });
 
-// Main App Content Component
+// Configure notification behavior
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+// Helper: register for push notifications
+async function registerForPushNotificationsAsync(): Promise<string | undefined> {
+  let token;
+
+  if (Device.isDevice) {
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      alert('Failed to get push token for push notification!');
+      return;
+    }
+
+    token = (await Notifications.getExpoPushTokenAsync()).data;
+    console.log('Expo Push Token:', token);
+  } else {
+    alert('Must use a physical device for push notifications');
+  }
+
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  return token;
+}
+
+// ----------------- APP CONTENT -----------------
 const AppContent = () => {
   const { isLoading } = useAuth();
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
 
   // Handle deep linking
   useEffect(() => {
-    // Initialize deep linking
-    // This would be set up to handle URLs like internbridge://internships/123
+    // TODO: setup deep links like internbridge://internships/123
   }, []);
 
   // Handle notifications
   useEffect(() => {
     const setupNotifications = async () => {
       try {
-        // Request notification permissions
-        await NotificationService.requestPermission();
-        
-        // Get FCM token
-        const token = await NotificationService.getFCMToken();
+        const token = await registerForPushNotificationsAsync();
         if (token) {
-          console.log('FCM Token:', token);
-          // You would typically send this token to your backend
+          console.log('Registered for push notifications:', token);
+          // Optionally send token to your backend here
         }
       } catch (error) {
         console.error('Failed to setup notifications:', error);
@@ -61,13 +104,29 @@ const AppContent = () => {
     };
 
     setupNotifications();
+
+    // Listen for foreground notifications
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification received:', notification);
+    });
+
+    // Listen for user tapping a notification
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Notification response:', response);
+    });
+
+    return () => {
+      if (notificationListener.current)
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      if (responseListener.current)
+        Notifications.removeNotificationSubscription(responseListener.current);
+    };
   }, []);
 
   // Global error handler
   useEffect(() => {
     const errorHandler = (error: Error) => {
       console.error('Global error:', error);
-      // In production, you might want to send this to an error reporting service
     };
 
     const promiseRejectionHandler = (event: PromiseRejectionEvent) => {
@@ -75,7 +134,6 @@ const AppContent = () => {
       event.preventDefault();
     };
 
-    // Set up global error handling
     if (typeof window !== 'undefined') {
       window.addEventListener('error', (event) => errorHandler(event.error));
       window.addEventListener('unhandledrejection', promiseRejectionHandler);
@@ -89,12 +147,11 @@ const AppContent = () => {
     };
   }, []);
 
-  // You can show a splash screen here while loading
   if (isLoading) {
     return (
       <SafeAreaProvider>
         <StatusBar style="auto" />
-        {/* Custom loading screen can be implemented here */}
+        {/* Add a custom loading screen here */}
       </SafeAreaProvider>
     );
   }
@@ -111,7 +168,7 @@ const AppContent = () => {
   );
 };
 
-// Main App Component
+// ----------------- MAIN APP WRAPPER -----------------
 const App = () => {
   return (
     <AuthProvider>

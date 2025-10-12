@@ -1,5 +1,6 @@
+// app/theme/theme.ts
 import { DefaultTheme } from 'react-native-paper';
-import { Colors } from '../constants/Colors';
+import { Colors } from '../../constants/Colors';
 
 export const theme = {
   ...DefaultTheme,
@@ -50,3 +51,6 @@ export const theme = {
 };
 
 export type AppTheme = typeof theme;
+
+// Default export to fix the expo-router error
+export default theme;

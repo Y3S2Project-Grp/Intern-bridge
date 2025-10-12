@@ -1,3 +1,4 @@
+// components/DashboardLayout.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -5,12 +6,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Dimensions,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useAuth } from '../../hooks/useAuth';
-import { ScreenNames } from '../../constants/ScreenNames';
+import { useAuth } from '../../../hooks/useAuth';
+import { ScreenNames } from '../../../constants/ScreenNames';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,18 @@ interface DashboardLayoutProps {
   showFooter?: boolean;
   customHeader?: React.ReactNode;
 }
+
+const Colors = {
+  primary: '#1E40AF',
+  lightPrimary: '#DBEAFE',
+  background: '#F3F4F6',
+  white: '#FFFFFF',
+  dark: '#1F2937',
+  gray: '#6B7280',
+  border: '#E5E7EB',
+  error: '#EF4444',
+  lightError: '#FEE2E2',
+};
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   children,
@@ -29,40 +42,43 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const route = useRoute();
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const getRoleSpecificMenu = () => {
     if (!user?.role) return [];
 
     const commonMenu = [
       { label: 'Profile', screen: ScreenNames.PROFILE, icon: '👤' },
-      { label: 'Settings', screen: 'Settings', icon: '⚙️' },
+      { label: 'Settings', screen: ScreenNames.SETTINGS, icon: '⚙️' },
     ];
 
     const roleMenus = {
-      youth: [
+      student: [
         { label: 'Dashboard', screen: ScreenNames.YOUTH_HOME, icon: '🏠' },
-        { label: 'Eligibility Check', screen: ScreenNames.ELIGIBILITY, icon: '✅' },
-        { label: 'Internships', screen: ScreenNames.INTERNSHIPS, icon: '💼' },
+        { label: 'Check Eligibility', screen: ScreenNames.ELIGIBILITY, icon: '✅' },
+        { label: 'Browse Internships', screen: ScreenNames.INTERNSHIPS, icon: '💼' },
         { label: 'My Applications', screen: ScreenNames.APPLICATIONS, icon: '📋' },
-        { label: 'Career Tips', screen: 'CareerTips', icon: '💡' },
+        { label: 'Build CV', screen: ScreenNames.CV_BUILDER, icon: '📝' },
+        { label: 'Build Portfolio', screen: ScreenNames.PORTFOLIO, icon: '🎨' },
+        { label: 'Career Tips', screen: ScreenNames.CAREER_TIPS, icon: '💡' },
       ],
-      organization: [
+      employer: [
         { label: 'Dashboard', screen: ScreenNames.ORG_HOME, icon: '🏠' },
-        { label: 'Post Internship', screen: 'AddInternship', icon: '➕' },
-        { label: 'Manage Postings', screen: ScreenNames.INTERNSHIPS, icon: '📊' },
-        { label: 'Applicants', screen: 'ApplicantsList', icon: '👥' },
-        { label: 'Analytics', screen: 'Analytics', icon: '📈' },
+        { label: 'Post Internship', screen: ScreenNames.ADD_INTERNSHIP, icon: '➕' },
+        { label: 'Manage Postings', screen: ScreenNames.MANAGE_POSTINGS, icon: '📊' },
+        { label: 'Applicants', screen: ScreenNames.APPLICANTS_LIST, icon: '👥' },
+        { label: 'Analytics', screen: ScreenNames.ANALYTICS, icon: '📈' },
       ],
       admin: [
         { label: 'Dashboard', screen: ScreenNames.ADMIN_HOME, icon: '🏠' },
-        { label: 'User Management', screen: 'UserManagement', icon: '👥' },
-        { label: 'Approvals', screen: 'AdminApproval', icon: '✅' },
-        { label: 'Analytics', screen: 'Analytics', icon: '📊' },
-        { label: 'System Settings', screen: 'SystemSettings', icon: '⚙️' },
+        { label: 'User Management', screen: ScreenNames.USER_MANAGEMENT, icon: '👥' },
+        { label: 'Approvals', screen: ScreenNames.ADMIN_APPROVAL, icon: '✅' },
+        { label: 'Analytics', screen: ScreenNames.ANALYTICS, icon: '📊' },
+        { label: 'System Settings', screen: ScreenNames.SYSTEM_SETTINGS, icon: '⚙️' },
       ],
     };
 
-    return [...(roleMenus[user.role] || []), ...commonMenu];
+    return [...(roleMenus[user.role as keyof typeof roleMenus] || []), ...commonMenu];
   };
 
   const menuItems = getRoleSpecificMenu();
@@ -73,13 +89,21 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
   const handleMenuPress = (screen: string) => {
     setSidebarOpen(false);
-    navigation.navigate(screen as never);
+    // Use type assertion for navigation
+    (navigation as any).navigate(screen);
   };
 
   const handleLogout = async () => {
-    setSidebarOpen(false);
-    await logout();
-    navigation.navigate(ScreenNames.LOGIN as never);
+    try {
+      setIsLoggingOut(true);
+      setSidebarOpen(false);
+      await logout();
+      (navigation as any).navigate(ScreenNames.LOGIN);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -97,7 +121,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           
           <TouchableOpacity 
             style={styles.profileButton}
-            onPress={() => navigation.navigate(ScreenNames.PROFILE as never)}
+            onPress={() => (navigation as any).navigate(ScreenNames.PROFILE)}
           >
             <Text style={styles.profileIcon}>👤</Text>
           </TouchableOpacity>
@@ -146,9 +170,19 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
             {/* Footer Actions */}
             <View style={styles.sidebarFooter}>
-              <TouchableOpacity style={styles.footerButton} onPress={handleLogout}>
-                <Text style={styles.footerButtonIcon}>🚪</Text>
-                <Text style={styles.footerButtonText}>Logout</Text>
+              <TouchableOpacity 
+                style={styles.footerButton} 
+                onPress={handleLogout}
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? (
+                  <ActivityIndicator size="small" color="#EF4444" />
+                ) : (
+                  <>
+                    <Text style={styles.footerButtonIcon}>🚪</Text>
+                    <Text style={styles.footerButtonText}>Logout</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -175,13 +209,13 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: Colors.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#1E40AF',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 12,
     height: 60,
@@ -190,21 +224,21 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   menuIcon: {
-    fontSize: 18,
-    color: '#FFFFFF',
+    fontSize: 20,
+    color: Colors.white,
     fontWeight: 'bold',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: Colors.white,
   },
   profileButton: {
     padding: 8,
   },
   profileIcon: {
-    fontSize: 18,
-    color: '#FFFFFF',
+    fontSize: 20,
+    color: Colors.white,
   },
   sidebarOverlay: {
     position: 'absolute',
@@ -212,7 +246,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     zIndex: 1000,
   },
   sidebar: {
@@ -220,53 +254,55 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     bottom: 0,
-    width: Dimensions.get('window').width * 0.8,
-    backgroundColor: '#FFFFFF',
+    width: '80%',
+    maxWidth: 300,
+    backgroundColor: Colors.white,
     zIndex: 1001,
   },
   sidebarHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#1E40AF',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
   sidebarTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: Colors.white,
   },
   closeIcon: {
     fontSize: 20,
-    color: '#FFFFFF',
+    color: Colors.white,
     fontWeight: 'bold',
   },
   userInfo: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: Colors.border,
   },
   userName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#1F2937',
+    color: Colors.dark,
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 14,
-    color: '#6B7280',
+    color: Colors.gray,
     marginBottom: 8,
   },
   roleBadge: {
-    backgroundColor: '#1E40AF',
+    backgroundColor: Colors.primary,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     alignSelf: 'flex-start',
   },
   roleText: {
-    color: '#FFFFFF',
     fontSize: 12,
+    color: Colors.white,
     fontWeight: '600',
   },
   menuContainer: {
@@ -275,30 +311,31 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
     paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: Colors.border,
   },
   menuItemActive: {
-    backgroundColor: '#EFF6FF',
-    borderLeftWidth: 4,
-    borderLeftColor: '#1E40AF',
+    backgroundColor: Colors.lightPrimary,
   },
   menuLabel: {
     fontSize: 16,
-    color: '#1F2937',
+    color: Colors.dark,
     marginLeft: 12,
   },
   sidebarFooter: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: Colors.border,
   },
   footerButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
+    justifyContent: 'center',
+    padding: 12,
+    backgroundColor: Colors.lightError,
+    borderRadius: 8,
   },
   footerButtonIcon: {
     fontSize: 16,
@@ -306,20 +343,20 @@ const styles = StyleSheet.create({
   },
   footerButtonText: {
     fontSize: 16,
-    color: '#EF4444',
+    color: Colors.error,
     fontWeight: '600',
   },
   content: {
     flex: 1,
   },
   footer: {
-    backgroundColor: '#1E40AF',
-    padding: 12,
+    backgroundColor: Colors.dark,
+    padding: 16,
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 12,
-    color: '#FFFFFF',
+    fontSize: 14,
+    color: Colors.white,
     textAlign: 'center',
   },
 });
